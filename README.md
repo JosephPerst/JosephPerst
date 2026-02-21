@@ -1,6 +1,6 @@
 # Joseph Persteins
 
-City Island native. West Point cadet (Class of 2026) studying Applied Statistics & Data Science. I build ML systems for defense and industry.
+City Island native. West Point 2026. Applied Statistics & Data Science. I build ML systems for defense and industry.
 
 ## Selected Work
 
