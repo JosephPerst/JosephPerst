@@ -10,16 +10,26 @@
   <main class="app">
     <header>
       <h1>🌍 Worldle</h1>
-      <p class="subtitle">Guess the country from its shape. 6 tries.</p>
+      <p class="subtitle" id="subtitle">Guess the country from its shape. 6 tries.</p>
       <p class="seed-line">
         Seed: <span id="seed-label"></span>
         <button id="share-btn" type="button">Share link</button>
         <button id="custom-seed-btn" type="button">Custom seed</button>
       </p>
+      <div class="stats-bar" id="stats-bar">
+        <div><span id="stat-streak">0</span><small>streak</small></div>
+        <div><span id="stat-best">0</span><small>best</small></div>
+        <div><span id="stat-won">0</span><small>won</small></div>
+        <div><span id="stat-played">0</span><small>played</small></div>
+      </div>
+      <div class="mode-row">
+        <button id="mode-silhouette" type="button" class="mode-btn active">Silhouette</button>
+        <button id="mode-flag" type="button" class="mode-btn">Flag</button>
+      </div>
     </header>
 
-    <section class="silhouette">
-      <img id="country-img" alt="Mystery country silhouette" />
+    <section class="silhouette" id="silhouette-box">
+      <img id="country-img" alt="Mystery country" />
     </section>
 
     <section class="guesses" id="guesses"></section>
@@ -35,6 +45,10 @@
       <ul id="suggestions" class="suggestions"></ul>
       <button id="guess-btn" type="button">Guess</button>
     </section>
+
+    <div class="action-row">
+      <button id="giveup-btn" type="button">Give up</button>
+    </div>
 
     <section class="result" id="result" hidden></section>
 

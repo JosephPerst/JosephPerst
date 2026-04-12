@@ -66,6 +66,59 @@ button {
 button:hover { background: #2d3460; }
 button:disabled { opacity: 0.5; cursor: default; }
 
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.stats-bar > div {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 4px;
+  text-align: center;
+}
+
+.stats-bar span {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--accent-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-bar small {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.mode-row {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  margin: 0 0 14px;
+}
+
+.mode-btn {
+  margin: 0;
+  border-radius: 0;
+  border-right: none;
+}
+
+.mode-btn:first-child { border-radius: 8px 0 0 8px; }
+.mode-btn:last-child { border-radius: 0 8px 8px 0; border-right: 1px solid var(--border); }
+
+.mode-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
 .silhouette {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -80,9 +133,30 @@ button:disabled { opacity: 0.5; cursor: default; }
 .silhouette img {
   max-width: 100%;
   max-height: 240px;
-  /* render the outline clearly */
-  filter: brightness(0) invert(1);
   image-rendering: auto;
+}
+
+.silhouette.silhouette-mode img {
+  /* render outline as solid white */
+  filter: brightness(0) invert(1);
+}
+
+.action-row {
+  margin-top: 12px;
+  display: flex;
+  justify-content: center;
+}
+
+#giveup-btn {
+  margin: 0;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+#giveup-btn:hover {
+  color: var(--wrong);
+  border-color: var(--wrong);
 }
 
 .guesses {

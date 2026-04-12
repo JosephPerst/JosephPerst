@@ -118,12 +118,15 @@
 
   // --- game state ---
   const seed = getSeed();
+  const isDailySeed = seed === todayStr();
   const answer = pickCountry(seed);
   const guesses = []; // array of { country, distKm, bearing, proxPct, correct }
+  let gameOver = false;
 
   // --- DOM refs ---
   const $ = (id) => document.getElementById(id);
   const seedLabel = $("seed-label");
+  const silhouetteBox = $("silhouette-box");
   const countryImg = $("country-img");
   const guessesEl = $("guesses");
   const inputEl = $("guess-input");
@@ -132,13 +135,116 @@
   const resultEl = $("result");
   const shareBtn = $("share-btn");
   const customSeedBtn = $("custom-seed-btn");
+  const giveUpBtn = $("giveup-btn");
+  const modeSilBtn = $("mode-silhouette");
+  const modeFlagBtn = $("mode-flag");
+  const subtitleEl = $("subtitle");
+  const statStreak = $("stat-streak");
+  const statBest = $("stat-best");
+  const statWon = $("stat-won");
+  const statPlayed = $("stat-played");
 
   seedLabel.textContent = seed;
-  countryImg.src = `https://raw.githubusercontent.com/djaiss/mapsicon/master/all/${answer.code}/vector.svg`;
-  countryImg.onerror = () => {
-    // fallback to 1024 png if svg missing
-    countryImg.src = `https://raw.githubusercontent.com/djaiss/mapsicon/master/all/${answer.code}/1024.png`;
+
+  // --- display mode: silhouette | flag ---
+  const MODE_KEY = "worldle.mode";
+  let displayMode = localStorage.getItem(MODE_KEY) || "silhouette";
+
+  function silhouetteUrl(code) {
+    return `https://raw.githubusercontent.com/djaiss/mapsicon/master/all/${code}/vector.svg`;
+  }
+  function flagUrl(code) {
+    return `https://raw.githubusercontent.com/hampusborgos/country-flags/main/svg/${code}.svg`;
+  }
+
+  function applyMode() {
+    localStorage.setItem(MODE_KEY, displayMode);
+    if (displayMode === "silhouette") {
+      silhouetteBox.classList.add("silhouette-mode");
+      countryImg.alt = "Mystery country silhouette";
+      countryImg.src = silhouetteUrl(answer.code);
+      countryImg.onerror = () => {
+        countryImg.onerror = null;
+        countryImg.src = `https://raw.githubusercontent.com/djaiss/mapsicon/master/all/${answer.code}/1024.png`;
+      };
+      subtitleEl.textContent = "Guess the country from its shape. 6 tries.";
+    } else {
+      silhouetteBox.classList.remove("silhouette-mode");
+      countryImg.alt = "Mystery country flag";
+      countryImg.onerror = null;
+      countryImg.src = flagUrl(answer.code);
+    }
+    modeSilBtn.classList.toggle("active", displayMode === "silhouette");
+    modeFlagBtn.classList.toggle("active", displayMode === "flag");
+    if (displayMode === "flag") {
+      subtitleEl.textContent = "Guess the country from its flag. 6 tries.";
+    }
+  }
+
+  // --- stats / streaks (daily seed only) ---
+  const STATS_KEY = "worldle.stats";
+  const emptyStats = {
+    played: 0,
+    won: 0,
+    currentStreak: 0,
+    maxStreak: 0,
+    lastDailySeed: null,
+    lastDailyWon: false,
   };
+
+  function loadStats() {
+    try {
+      return Object.assign({}, emptyStats, JSON.parse(localStorage.getItem(STATS_KEY) || "{}"));
+    } catch {
+      return { ...emptyStats };
+    }
+  }
+  function saveStats(s) {
+    localStorage.setItem(STATS_KEY, JSON.stringify(s));
+  }
+  function renderStats() {
+    const s = loadStats();
+    statStreak.textContent = s.currentStreak;
+    statBest.textContent = s.maxStreak;
+    statWon.textContent = s.won;
+    statPlayed.textContent = s.played;
+  }
+
+  function prevDayStr(seedStr) {
+    // seedStr is YYYY-MM-DD
+    const [y, m, d] = seedStr.split("-").map(Number);
+    const dt = new Date(Date.UTC(y, m - 1, d));
+    dt.setUTCDate(dt.getUTCDate() - 1);
+    const yy = dt.getUTCFullYear();
+    const mm = String(dt.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(dt.getUTCDate()).padStart(2, "0");
+    return `${yy}-${mm}-${dd}`;
+  }
+
+  function recordResult(won) {
+    if (!isDailySeed) return; // only daily counts
+    const s = loadStats();
+    if (s.lastDailySeed === seed) return; // already recorded
+    s.played += 1;
+    if (won) {
+      s.won += 1;
+      if (s.lastDailySeed && s.lastDailyWon && prevDayStr(seed) === s.lastDailySeed) {
+        s.currentStreak += 1;
+      } else {
+        s.currentStreak = 1;
+      }
+      if (s.currentStreak > s.maxStreak) s.maxStreak = s.currentStreak;
+    } else {
+      s.currentStreak = 0;
+    }
+    s.lastDailySeed = seed;
+    s.lastDailyWon = won;
+    saveStats(s);
+    renderStats();
+  }
+
+  applyMode();
+  renderStats();
 
   // --- rendering ---
   function renderGuesses() {
@@ -156,22 +262,33 @@
     }
   }
 
-  function endGame(won) {
+  function endGame(won, gaveUp = false) {
+    if (gameOver) return;
+    gameOver = true;
     inputEl.disabled = true;
     guessBtn.disabled = true;
+    giveUpBtn.disabled = true;
     suggestionsEl.classList.add("hidden");
     resultEl.hidden = false;
     resultEl.classList.toggle("win", won);
     resultEl.classList.toggle("lose", !won);
     const tries = guesses.length;
-    resultEl.innerHTML = won
-      ? `<h2>You got it! 🎉</h2>
-         <p>The country was <span class="answer">${answer.name}</span>.</p>
-         <p>${tries} / ${MAX_GUESSES} guesses.</p>
-         <p><a href="?seed=${encodeURIComponent(seed)}">Reload</a> · Share this seed with your girlfriend to compare scores.</p>`
-      : `<h2>Out of guesses 😢</h2>
-         <p>The answer was <span class="answer">${answer.name}</span>.</p>
-         <p>Try another seed, or come back tomorrow.</p>`;
+    const headline = won
+      ? "<h2>You got it! 🎉</h2>"
+      : gaveUp
+      ? "<h2>You gave up 🏳️</h2>"
+      : "<h2>Out of guesses 😢</h2>";
+    const body = won
+      ? `<p>The country was <span class="answer">${answer.name}</span>.</p>
+         <p>${tries} / ${MAX_GUESSES} guesses.</p>`
+      : `<p>The answer was <span class="answer">${answer.name}</span>.</p>`;
+    const footer = isDailySeed
+      ? `<p>Come back tomorrow for a new daily, or try a <a href="#" id="new-seed-link">custom seed</a>.</p>`
+      : `<p><a href="?seed=${encodeURIComponent(seed)}">Reload</a> · share this seed to compare scores.</p>`;
+    resultEl.innerHTML = headline + body + footer;
+    const nsl = document.getElementById("new-seed-link");
+    if (nsl) nsl.addEventListener("click", (e) => { e.preventDefault(); customSeedBtn.click(); });
+    recordResult(won);
   }
 
   function submitGuess(country) {
@@ -281,6 +398,23 @@
     );
     if (!s) return;
     location.search = `?seed=${encodeURIComponent(s)}`;
+  });
+
+  giveUpBtn.addEventListener("click", () => {
+    if (gameOver) return;
+    if (!confirm("Reveal the answer and end this round?")) return;
+    endGame(false, true);
+  });
+
+  modeSilBtn.addEventListener("click", () => {
+    if (displayMode === "silhouette") return;
+    displayMode = "silhouette";
+    applyMode();
+  });
+  modeFlagBtn.addEventListener("click", () => {
+    if (displayMode === "flag") return;
+    displayMode = "flag";
+    applyMode();
   });
 
   renderGuesses();
