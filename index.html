@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Worldle — Guess the Country</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app">
+    <header>
+      <h1>🌍 Worldle</h1>
+      <p class="subtitle">Guess the country from its shape. 6 tries.</p>
+      <p class="seed-line">
+        Seed: <span id="seed-label"></span>
+        <button id="share-btn" type="button">Share link</button>
+        <button id="custom-seed-btn" type="button">Custom seed</button>
+      </p>
+    </header>
+
+    <section class="silhouette">
+      <img id="country-img" alt="Mystery country silhouette" />
+    </section>
+
+    <section class="guesses" id="guesses"></section>
+
+    <section class="input-row" id="input-row">
+      <input
+        id="guess-input"
+        type="text"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Type a country…"
+      />
+      <ul id="suggestions" class="suggestions"></ul>
+      <button id="guess-btn" type="button">Guess</button>
+    </section>
+
+    <section class="result" id="result" hidden></section>
+
+    <footer>
+      <p>Share the link with the same seed to play the same round together.</p>
+    </footer>
+  </main>
+
+  <script src="countries.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
